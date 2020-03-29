@@ -235,6 +235,34 @@ class SRNorLatch(MultipleOutputComponent):
         return f'({self._inputs["Reset"]},{self._inputs["Set"]} ) -> ({self._outputs["Q"]}, {self._outputs["QBar"]})'
 
 
+class SRNandLatch(MultipleOutputComponent):
+    def __init__(self, inputs: NodeList = None, name: str = None):
+        self._components = [NandGate(name=name), NandGate(name=name)]
+        self._outputs = NodeList([i.output_node for i in self._components])
+        super().__init__(inputs, name)
+
+    def set_inputs(self, inputs: NodeList):
+        inputs.validate(self.name, expected_names=['Set', 'Reset'], min_length=2, max_length=2)
+
+        super().set_inputs(inputs)
+        gate1 = self._components[0]
+        gate2 = self._components[1]
+        gate1.set_inputs(NodeList([inputs.get_node_by_name('Set'), gate2.output_node]))
+        gate2.set_inputs(NodeList([inputs.get_node_by_name('Reset'), gate1.output_node]))
+        gate1.output_node.name = f'Q'
+        gate2.output_node.name = f'QBar'
+        self._outputs = NodeList([gate1.output_node, gate2.output_node])
+
+    def calculate(self):
+        self._components[0].calculate()
+        self._components[1].calculate()
+        self._components[0].calculate()
+        return self.output_nodes
+
+    def __str__(self):
+        return f'({self._inputs["Reset"]},{self._inputs["Set"]} ) -> ({self._outputs["Q"]}, {self._outputs["QBar"]})'
+
+
 def main():
     s = Node(State.low, name="S")
     r = Node(State.high, name="R")

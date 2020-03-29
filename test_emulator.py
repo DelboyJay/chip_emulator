@@ -1,5 +1,6 @@
 import pytest
-from emulate import State, Node, NodeList, AndGate, OrGate, NotGate, NandGate, NorGate, XorGate, XnorGate, SRNorLatch
+from emulate import State, Node, NodeList, AndGate, OrGate, NotGate, NandGate, NorGate, XorGate, XnorGate, SRNorLatch, \
+    SRNandLatch
 
 
 class TestNodeList:
@@ -284,3 +285,48 @@ class TestSRNorLatch:
         out_nodes = latch.calculate()
         assert out_nodes['Q'] == State.high
         assert out_nodes['QBar'] == State.low
+
+
+class TestSRNandLatch:
+    @pytest.mark.parametrize(
+        's, r, q, qbar',
+        (
+                (State.high, State.high, State.high, State.low),  # Last state
+                (State.high, State.low, State.low, State.high),
+                (State.low, State.high, State.high, State.low),
+                (State.low, State.low, State.high, State.high),  # illegal state
+        )
+    )
+    def test_gate(self, s, r, q, qbar):
+        latch = SRNandLatch(NodeList([Node(s, name='Set'), Node(r, name='Reset')]))
+        out_nodes = latch.calculate()
+        assert [i.state for i in out_nodes] == [q, qbar], latch
+
+    def test_last_state(self):
+        """
+        Tests that Set=low & Reset=Low provides the previous state
+        """
+        set_node = Node(State.low, name='Set')
+        reset_node = Node(State.high, name='Reset')
+        latch = SRNandLatch(NodeList([set_node, reset_node]))
+        out_nodes = latch.calculate()
+        assert out_nodes['Q'] == State.high
+        assert out_nodes['QBar'] == State.low
+
+        set_node.state = State.high
+        reset_node.state = State.high
+        out_nodes = latch.calculate()
+        assert out_nodes['Q'] == State.high
+        assert out_nodes['QBar'] == State.low
+
+        set_node.state = State.high
+        reset_node.state = State.low
+        out_nodes = latch.calculate()
+        assert out_nodes['Q'] == State.low
+        assert out_nodes['QBar'] == State.high
+
+        set_node.state = State.high
+        reset_node.state = State.high
+        out_nodes = latch.calculate()
+        assert out_nodes['Q'] == State.low
+        assert out_nodes['QBar'] == State.high
