@@ -1,9 +1,75 @@
 import pytest
-import emulate
-from emulate import State, Node
+from emulate import State, Node, NodeList, AndGate, OrGate, NotGate, NandGate, NorGate, XorGate, XnorGate, SRNorLatch
+
+
+class TestNodeList:
+    def test_validation_minimum_success(self):
+        nodes = NodeList([Node(name='1'), Node(name='2')])
+        nodes.validate('element', min_length=2)
+
+    def test_validation_minimum_fails(self):
+        nodes = NodeList([Node(name='1'), Node(name='2')])
+        with pytest.raises(ValueError) as ex:
+            nodes.validate('element', min_length=3)
+        assert str(ex.value) == f'element must have a minimum of 3 inputs.'
+
+    def test_validation_maximum_success(self):
+        nodes = NodeList([Node(name='1'), Node(name='2')])
+        nodes.validate('element', max_length=2)
+
+    def test_validation_maximum_fails(self):
+        nodes = NodeList([Node(name='1'), Node(name='2')])
+        with pytest.raises(ValueError) as ex:
+            nodes.validate('element', max_length=1)
+        assert str(ex.value) == f'element must have a maximum of 1 inputs.'
+
+    def test_validation_expected_names_success(self):
+        nodes = NodeList([Node(name='1'), Node(name='2')])
+        nodes.validate('element', expected_names=['1', '2'])
+
+    def test_validation_expected_names_not_expected(self):
+        nodes = NodeList([Node(name='1'), Node(name='2')])
+        with pytest.raises(ValueError) as ex:
+            nodes.validate('element', expected_names=['2', '3'])
+        assert str(ex.value) == f'The following node names were not expected: 1'
+
+    def test_validation_expected_names_missing(self):
+        nodes = NodeList([Node(name='2')])
+        with pytest.raises(ValueError) as ex:
+            nodes.validate('element', expected_names=['2', '3'])
+        assert str(ex.value) == f'The following node names were missing: 3'
+
+    def test_get_node_by_name_success(self):
+        node1 = Node(name='set')
+        node2 = Node(name='Reset')
+        node3 = Node(name='3')
+        nodes = NodeList([node1, node2, node3])
+        assert nodes.get_node_by_name('set') == node1
+        assert nodes.get_node_by_name('Reset') == node2
+        assert nodes.get_node_by_name('3') == node3
+
+    def test_get_node_by_name_fails(self):
+        node1 = Node(name='1')
+        node2 = Node(name='2')
+        node3 = Node(name='3')
+        nodes = NodeList([node1, node2, node3])
+        with pytest.raises(ValueError) as ex:
+            nodes.get_node_by_name('4')
+        assert str(ex.value) == f'Node 4 not found. Valid node names are (1, 2, 3)'
+
+    def test_get_node_by_name_fail_case_sensitive(self):
+        node1 = Node(name='set')
+        node2 = Node(name='2')
+        node3 = Node(name='3')
+        nodes = NodeList([node1, node2, node3])
+        with pytest.raises(ValueError) as ex:
+            nodes.get_node_by_name('Set')
+        assert str(ex.value) == f'Node Set not found. Valid node names are (set, 2, 3)'
 
 
 class TwoInputMixin:
+    component = NotImplemented
+
     def test_names(self):
         c = self.component([Node(State.low), Node(State.low)], name='testname')
         assert c.name == 'testname'
@@ -22,7 +88,7 @@ class TwoInputMixin:
 
 
 class TestOrGate(TwoInputMixin):
-    component = emulate.OrGate
+    component = OrGate
 
     @pytest.mark.parametrize(
         'ina, inb, inc, result',
@@ -38,13 +104,13 @@ class TestOrGate(TwoInputMixin):
         )
     )
     def test_gate(self, ina, inb, inc, result):
-        c = self.component([Node(ina), Node(inb), Node(inc)])
+        c = self.component(NodeList([Node(ina), Node(inb), Node(inc)]))
         assert c.calculate() == result
         assert c.output_node.state == result
 
 
 class TestNorGate(TwoInputMixin):
-    component = emulate.NorGate
+    component = NorGate
 
     @pytest.mark.parametrize(
         'ina, inb, inc, result',
@@ -60,13 +126,13 @@ class TestNorGate(TwoInputMixin):
         )
     )
     def test_nor_gate(self, ina, inb, inc, result):
-        c = self.component([Node(ina), Node(inb), Node(inc)])
+        c = self.component(NodeList([Node(ina), Node(inb), Node(inc)]))
         assert c.calculate() == result
         assert c.output_node.state == result
 
 
 class TestAndGate(TwoInputMixin):
-    component = emulate.AndGate
+    component = AndGate
 
     @pytest.mark.parametrize(
         'ina, inb, inc, result',
@@ -82,13 +148,13 @@ class TestAndGate(TwoInputMixin):
         )
     )
     def test_and_gate(self, ina, inb, inc, result):
-        c = self.component([Node(ina), Node(inb), Node(inc)])
+        c = self.component(NodeList([Node(ina), Node(inb), Node(inc)]))
         assert c.calculate() == result
         assert c.output_node.state == result
 
 
 class TestNandGate(TwoInputMixin):
-    component = emulate.NandGate
+    component = NandGate
 
     @pytest.mark.parametrize(
         'ina, inb, inc, result',
@@ -104,13 +170,13 @@ class TestNandGate(TwoInputMixin):
         )
     )
     def test_nand_gate(self, ina, inb, inc, result):
-        c = self.component([Node(ina), Node(inb), Node(inc)])
+        c = self.component(NodeList([Node(ina), Node(inb), Node(inc)]))
         assert c.calculate() == result
         assert c.output_node.state == result
 
 
 class TestXorGate(TwoInputMixin):
-    component = emulate.XorGate
+    component = XorGate
 
     @pytest.mark.parametrize(
         'ina, inb, inc, result',
@@ -126,13 +192,13 @@ class TestXorGate(TwoInputMixin):
         )
     )
     def test_xor_gate(self, ina, inb, inc, result):
-        c = self.component([Node(ina), Node(inb), Node(inc)])
+        c = self.component(NodeList([Node(ina), Node(inb), Node(inc)]))
         assert c.calculate() == result
         assert c.output_node.state == result
 
 
 class TestXnorGate(TwoInputMixin):
-    component = emulate.XnorGate
+    component = XnorGate
 
     @pytest.mark.parametrize(
         'ina, inb, inc, result',
@@ -148,13 +214,13 @@ class TestXnorGate(TwoInputMixin):
         )
     )
     def test_xnor_gate(self, ina, inb, inc, result):
-        c = self.component([Node(ina), Node(inb), Node(inc)])
+        c = self.component(NodeList([Node(ina), Node(inb), Node(inc)]))
         assert c.calculate() == result
         assert c.output_node.state == result
 
 
-class TestNotGate():
-    component = emulate.NotGate
+class TestNotGate:
+    component = NotGate
 
     @pytest.mark.parametrize(
         'ina, result',
@@ -165,11 +231,56 @@ class TestNotGate():
     )
     def test_not_gate(self, ina, result):
         a = Node(ina)
-        b = self.component([a])
+        b = self.component(NodeList([a]))
         assert b.calculate() == result
         assert b.output_node.state == result
 
     def test_names(self):
-        c = self.component([Node(State.low)], name='testname')
+        c = self.component(NodeList([Node(State.low)]), name='testname')
         assert c.name == 'testname'
         assert c.output_node.name == 'testname_out'
+
+
+class TestSRNorLatch:
+    @pytest.mark.parametrize(
+        's, r, q, qbar',
+        (
+                (State.high, State.high, State.low, State.low),  # illegal state
+                (State.high, State.low, State.high, State.low),
+                (State.low, State.high, State.low, State.high),
+                (State.low, State.low, State.high, State.low),  # Last state
+        )
+    )
+    def test_gate(self, s, r, q, qbar):
+        latch = SRNorLatch(NodeList([Node(s, name='Set'), Node(r, name='Reset')]))
+        out_nodes = latch.calculate()
+        assert [i.state for i in out_nodes] == [q, qbar], latch
+
+    def test_last_state(self):
+        """
+        Tests that Set=low & Reset=Low provides the previous state
+        """
+        set_node = Node(State.low, name='Set')
+        reset_node = Node(State.high, name='Reset')
+        latch = SRNorLatch(NodeList([set_node, reset_node]))
+        out_nodes = latch.calculate()
+        assert out_nodes['Q'] == State.low
+        assert out_nodes['QBar'] == State.high
+
+        set_node.state = State.low
+        reset_node.state = State.low
+        out_nodes = latch.calculate()
+        assert out_nodes['Q'] == State.low
+        assert out_nodes['QBar'] == State.high
+
+        set_node.state = State.high
+        reset_node.state = State.low
+        out_nodes = latch.calculate()
+        assert out_nodes['Q'] == State.high
+        assert out_nodes['QBar'] == State.low
+
+        set_node.state = State.low
+        reset_node.state = State.low
+        out_nodes = latch.calculate()
+        assert out_nodes['Q'] == State.high
+        assert out_nodes['QBar'] == State.low
