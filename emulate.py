@@ -217,6 +217,8 @@ class SRNorLatch(MultipleOutputComponent):
         super().__init__(inputs, name)
 
     def set_inputs(self, inputs: Union[NodeList, list]):
+        if isinstance(inputs, list):
+            inputs = NodeList(inputs)
         inputs.validate(self.name, expected_names=['Set', 'Reset'], min_length=2, max_length=2)
 
         super().set_inputs(inputs)
@@ -245,6 +247,8 @@ class SRNandLatch(MultipleOutputComponent):
         super().__init__(inputs, name)
 
     def set_inputs(self, inputs: Union[NodeList, list]):
+        if isinstance(inputs, list):
+            inputs = NodeList(inputs)
         inputs.validate(self.name, expected_names=['Set', 'Reset'], min_length=2, max_length=2)
 
         super().set_inputs(inputs)
