@@ -1,6 +1,6 @@
 import pytest
 from emulate import State, Node, NodeList, AndGate, OrGate, NotGate, NandGate, NorGate, XorGate, XnorGate, SRNorLatch, \
-    SRNandLatch
+    SRNandLatch, DTypeFlipFlop
 
 
 class TestNodeList:
@@ -330,3 +330,71 @@ class TestSRNandLatch:
         out_nodes = latch.calculate()
         assert out_nodes['Q'] == State.low
         assert out_nodes['QBar'] == State.high
+
+
+class TestDTypeFlipFlop:
+    def test_basic(self):
+        d = Node(State.low, name='D')
+        clk = Node(State.high, name='Clk')
+        ff = DTypeFlipFlop(NodeList([d, clk]))
+        ff.calculate()
+        assert ff.output_nodes['Q'].state == State.low
+        assert ff.output_nodes['QBar'].state == State.high
+
+        d.state = State.high
+        clk.state = State.high
+        ff.calculate()
+        assert ff.output_nodes['Q'].state == State.high
+        assert ff.output_nodes['QBar'].state == State.low
+
+    def test_no_change_state_low_output(self):
+        d = Node(State.low, name='D')
+        clk = Node(State.high, name='Clk')
+        ff = DTypeFlipFlop(NodeList([d, clk]))
+        ff.calculate()
+        assert ff.output_nodes['Q'].state == State.low
+        assert ff.output_nodes['QBar'].state == State.high
+
+        d.state = State.low
+        clk.state = State.low
+        ff.calculate()
+        assert ff.output_nodes['Q'].state == State.low
+        assert ff.output_nodes['QBar'].state == State.high
+
+        d.state = State.high
+        clk.state = State.low
+        ff.calculate()
+        assert ff.output_nodes['Q'].state == State.low
+        assert ff.output_nodes['QBar'].state == State.high
+
+        d.state = State.low
+        clk.state = State.low
+        ff.calculate()
+        assert ff.output_nodes['Q'].state == State.low
+        assert ff.output_nodes['QBar'].state == State.high
+
+    def test_no_change_state_high_output(self):
+        d = Node(State.high, name='D')
+        clk = Node(State.high, name='Clk')
+        ff = DTypeFlipFlop(NodeList([d, clk]))
+        ff.calculate()
+        assert ff.output_nodes['Q'].state == State.high
+        assert ff.output_nodes['QBar'].state == State.low
+
+        d.state = State.low
+        clk.state = State.low
+        ff.calculate()
+        assert ff.output_nodes['Q'].state == State.high
+        assert ff.output_nodes['QBar'].state == State.low
+
+        d.state = State.high
+        clk.state = State.low
+        ff.calculate()
+        assert ff.output_nodes['Q'].state == State.high
+        assert ff.output_nodes['QBar'].state == State.low
+
+        d.state = State.low
+        clk.state = State.low
+        ff.calculate()
+        assert ff.output_nodes['Q'].state == State.high
+        assert ff.output_nodes['QBar'].state == State.low
