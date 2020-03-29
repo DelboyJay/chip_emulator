@@ -27,14 +27,14 @@ class TestOrGate(TwoInputMixin):
     @pytest.mark.parametrize(
         'ina, inb, inc, result',
         (
-                (State.low, State.low, State.low, State.low),
+                (State.high, State.high, State.high, State.high),
+                (State.high, State.high, State.low, State.high),
+                (State.high, State.low, State.high, State.high),
                 (State.high, State.low, State.low, State.high),
+                (State.low, State.high, State.high, State.high),
                 (State.low, State.high, State.low, State.high),
                 (State.low, State.low, State.high, State.high),
-                (State.high, State.high, State.low, State.high),
-                (State.low, State.high, State.high, State.high),
-                (State.high, State.low, State.high, State.high),
-                (State.high, State.high, State.high, State.high),
+                (State.low, State.low, State.low, State.low),
         )
     )
     def test_gate(self, ina, inb, inc, result):
@@ -49,14 +49,14 @@ class TestNorGate(TwoInputMixin):
     @pytest.mark.parametrize(
         'ina, inb, inc, result',
         (
-                (State.low, State.low, State.low, State.high),
+                (State.high, State.high, State.high, State.low),
+                (State.high, State.high, State.low, State.low),
+                (State.high, State.low, State.high, State.low),
                 (State.high, State.low, State.low, State.low),
+                (State.low, State.high, State.high, State.low),
                 (State.low, State.high, State.low, State.low),
                 (State.low, State.low, State.high, State.low),
-                (State.high, State.high, State.low, State.low),
-                (State.low, State.high, State.high, State.low),
-                (State.high, State.low, State.high, State.low),
-                (State.high, State.high, State.high, State.low),
+                (State.low, State.low, State.low, State.high),
         )
     )
     def test_nor_gate(self, ina, inb, inc, result):
@@ -71,14 +71,14 @@ class TestAndGate(TwoInputMixin):
     @pytest.mark.parametrize(
         'ina, inb, inc, result',
         (
-                (State.low, State.low, State.low, State.low),
+                (State.high, State.high, State.high, State.high),
+                (State.high, State.high, State.low, State.low),
+                (State.high, State.low, State.high, State.low),
                 (State.high, State.low, State.low, State.low),
+                (State.low, State.high, State.high, State.low),
                 (State.low, State.high, State.low, State.low),
                 (State.low, State.low, State.high, State.low),
-                (State.high, State.high, State.low, State.low),
-                (State.low, State.high, State.high, State.low),
-                (State.high, State.low, State.high, State.low),
-                (State.high, State.high, State.high, State.high),
+                (State.low, State.low, State.low, State.low),
         )
     )
     def test_and_gate(self, ina, inb, inc, result):
@@ -93,14 +93,14 @@ class TestNandGate(TwoInputMixin):
     @pytest.mark.parametrize(
         'ina, inb, inc, result',
         (
-                (State.low, State.low, State.low, State.high),
+                (State.high, State.high, State.high, State.low),
+                (State.high, State.high, State.low, State.high),
+                (State.high, State.low, State.high, State.high),
                 (State.high, State.low, State.low, State.high),
+                (State.low, State.high, State.high, State.high),
                 (State.low, State.high, State.low, State.high),
                 (State.low, State.low, State.high, State.high),
-                (State.high, State.high, State.low, State.high),
-                (State.low, State.high, State.high, State.high),
-                (State.high, State.low, State.high, State.high),
-                (State.high, State.high, State.high, State.low),
+                (State.low, State.low, State.low, State.high),
         )
     )
     def test_nand_gate(self, ina, inb, inc, result):
@@ -115,14 +115,14 @@ class TestXorGate(TwoInputMixin):
     @pytest.mark.parametrize(
         'ina, inb, inc, result',
         (
-                (State.low, State.low, State.low, State.low),
+                (State.high, State.high, State.high, State.low),
+                (State.high, State.high, State.low, State.low),
+                (State.high, State.low, State.high, State.low),
                 (State.high, State.low, State.low, State.high),
+                (State.low, State.high, State.high, State.low),
                 (State.low, State.high, State.low, State.high),
                 (State.low, State.low, State.high, State.high),
-                (State.high, State.high, State.low, State.low),
-                (State.low, State.high, State.high, State.low),
-                (State.high, State.low, State.high, State.low),
-                (State.high, State.high, State.high, State.low),
+                (State.low, State.low, State.low, State.low),
         )
     )
     def test_xor_gate(self, ina, inb, inc, result):
@@ -137,14 +137,14 @@ class TestXnorGate(TwoInputMixin):
     @pytest.mark.parametrize(
         'ina, inb, inc, result',
         (
-                (State.low, State.low, State.low, State.high),
+                (State.high, State.high, State.high, State.high),
+                (State.high, State.high, State.low, State.high),
+                (State.high, State.low, State.high, State.high),
                 (State.high, State.low, State.low, State.low),
+                (State.low, State.high, State.high, State.high),
                 (State.low, State.high, State.low, State.low),
                 (State.low, State.low, State.high, State.low),
-                (State.high, State.high, State.low, State.high),
-                (State.low, State.high, State.high, State.high),
-                (State.high, State.low, State.high, State.high),
-                (State.high, State.high, State.high, State.high),
+                (State.low, State.low, State.low, State.high),
         )
     )
     def test_xnor_gate(self, ina, inb, inc, result):
