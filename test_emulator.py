@@ -40,31 +40,31 @@ class TestNodeList:
             nodes.validate('element', expected_names=['2', '3'])
         assert str(ex.value) == f'The following node names were missing: 3'
 
-    def test_get_node_by_name_success(self):
+    def test_get_object_by_name_success(self):
         node1 = Node(name='set')
         node2 = Node(name='Reset')
         node3 = Node(name='3')
         nodes = NodeList([node1, node2, node3])
-        assert nodes.get_node_by_name('set') == node1
-        assert nodes.get_node_by_name('Reset') == node2
-        assert nodes.get_node_by_name('3') == node3
+        assert nodes.get_object_by_name('set') == node1
+        assert nodes.get_object_by_name('Reset') == node2
+        assert nodes.get_object_by_name('3') == node3
 
-    def test_get_node_by_name_fails(self):
+    def test_get_object_by_name_fails(self):
         node1 = Node(name='1')
         node2 = Node(name='2')
         node3 = Node(name='3')
         nodes = NodeList([node1, node2, node3])
         with pytest.raises(ValueError) as ex:
-            nodes.get_node_by_name('4')
+            nodes.get_object_by_name('4')
         assert str(ex.value) == f'Node 4 not found. Valid node names are (1, 2, 3)'
 
-    def test_get_node_by_name_fail_case_sensitive(self):
+    def test_get_object_by_name_fail_case_sensitive(self):
         node1 = Node(name='set')
         node2 = Node(name='2')
         node3 = Node(name='3')
         nodes = NodeList([node1, node2, node3])
         with pytest.raises(ValueError) as ex:
-            nodes.get_node_by_name('Set')
+            nodes.get_object_by_name('Set')
         assert str(ex.value) == f'Node Set not found. Valid node names are (set, 2, 3)'
 
 

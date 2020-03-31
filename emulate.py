@@ -34,17 +34,24 @@ class Node:
         return f'{self.name}: {str(self.state)}'
 
 
-class NodeList(list):
+class NamedObjectList(list):
+    object_type_name = 'Object'
+
     def __getitem__(self, index):
         if isinstance(index, int):
             return super().__getitem__(index)
-        return self.get_node_by_name(index)
+        return self.get_object_by_name(index)
 
-    def get_node_by_name(self, name: str) -> Node:
+    def get_object_by_name(self, name: str) -> Node:
         for n in self:
             if n.name == name:
                 return n
-        raise ValueError(f'Node {name} not found. Valid node names are ({", ".join(i.name for i in self)})')
+        raise ValueError(
+            f'{self.object_type_name} {name} not found. Valid node names are ({", ".join(i.name for i in self)})')
+
+
+class NodeList(NamedObjectList):
+    object_type_name = 'Node'
 
     def validate(self, element_name: str, expected_names: List[str] = None, min_length=None, max_length=None):
         if min_length and len(self) < min_length:
@@ -224,8 +231,8 @@ class SRNorLatch(MultipleOutputComponent):
         super().set_inputs(inputs)
         nor_gate1 = self._components[0]
         nor_gate2 = self._components[1]
-        nor_gate1.set_inputs([inputs.get_node_by_name('Reset'), nor_gate2.output_node])
-        nor_gate2.set_inputs([inputs.get_node_by_name('Set'), nor_gate1.output_node])
+        nor_gate1.set_inputs([inputs.get_object_by_name('Reset'), nor_gate2.output_node])
+        nor_gate2.set_inputs([inputs.get_object_by_name('Set'), nor_gate1.output_node])
         nor_gate1.output_node.name = f'Q'
         nor_gate2.output_node.name = f'QBar'
         self._outputs = NodeList([nor_gate1.output_node, nor_gate2.output_node])
@@ -254,8 +261,8 @@ class SRNandLatch(MultipleOutputComponent):
         super().set_inputs(inputs)
         gate1 = self._components[0]
         gate2 = self._components[1]
-        gate1.set_inputs([inputs.get_node_by_name('Set'), gate2.output_node])
-        gate2.set_inputs([inputs.get_node_by_name('Reset'), gate1.output_node])
+        gate1.set_inputs([inputs.get_object_by_name('Set'), gate2.output_node])
+        gate2.set_inputs([inputs.get_object_by_name('Reset'), gate1.output_node])
         gate1.output_node.name = f'Q'
         gate2.output_node.name = f'QBar'
         self._outputs = NodeList([gate1.output_node, gate2.output_node])
