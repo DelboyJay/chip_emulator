@@ -50,6 +50,11 @@ class NamedObjectList(list):
             f'{self.object_type_name} {name} not found. Valid node names are ({", ".join(i.name for i in self)})')
 
 
+class ComponentList(NamedObjectList):
+    object_type_name = 'Component'
+    pass
+
+
 class NodeList(NamedObjectList):
     object_type_name = 'Node'
 
@@ -169,7 +174,7 @@ class NotGate(OneOutputComponent):
 
 class NorGate(MinTwoInputComponentMixin, OneOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self._components = [OrGate(name=name), NotGate(name=name)]
+        self._components = ComponentList([OrGate(name=name), NotGate(name=name)])
         self._output = self._components[1].output_node
         super().__init__(inputs, name)
 
@@ -183,7 +188,7 @@ class NorGate(MinTwoInputComponentMixin, OneOutputComponent):
 
 class NandGate(MinTwoInputComponentMixin, OneOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self._components = [AndGate(name=name), NotGate(name=name)]
+        self._components = ComponentList([AndGate(name=name), NotGate(name=name)])
         self._output = self._components[1].output_node
         super().__init__(inputs, name)
 
@@ -205,7 +210,7 @@ class XorGate(MinTwoInputComponentMixin, OneOutputComponent):
 
 class XnorGate(MinTwoInputComponentMixin, OneOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self._components = [XorGate(name=name), NotGate(name=name)]
+        self._components = ComponentList([XorGate(name=name), NotGate(name=name)])
         self._output = self._components[1].output_node
         super().__init__(inputs, name)
 
@@ -219,7 +224,7 @@ class XnorGate(MinTwoInputComponentMixin, OneOutputComponent):
 
 class SRNorLatch(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self._components = [NorGate(name=name), NorGate(name=name)]
+        self._components = ComponentList([NorGate(name=name), NorGate(name=name)])
         self._outputs = NodeList([i.output_node for i in self._components])
         super().__init__(inputs, name)
 
@@ -249,7 +254,7 @@ class SRNorLatch(MultipleOutputComponent):
 
 class SRNandLatch(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self._components = [NandGate(name=name), NandGate(name=name)]
+        self._components = ComponentList([NandGate(name=name), NandGate(name=name)])
         self._outputs = NodeList([i.output_node for i in self._components])
         super().__init__(inputs, name)
 
@@ -279,8 +284,9 @@ class SRNandLatch(MultipleOutputComponent):
 
 class DTypeFlipFlop(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self._components = [NotGate(name=f'{name}_not'), NandGate(name=f'{name}_nand1'), NandGate(name=f'{name}_nand2'),
-                            SRNandLatch(name=f'{name}_srnand')]
+        self._components = ComponentList(
+            [NotGate(name=f'{name}_not'), NandGate(name=f'{name}_nand1'), NandGate(name=f'{name}_nand2'),
+             SRNandLatch(name=f'{name}_srnand')])
         self._outputs = self._components[3].output_nodes
         super().__init__(inputs, name)
 
@@ -307,8 +313,8 @@ class DTypeFlipFlop(MultipleOutputComponent):
 
 class JKFlipFlop(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self._components = [NandGate(name=f'{name}_nand1'), NandGate(name=f'{name}_nand2'),
-                            SRNandLatch(name=f'{name}_srnand')]
+        self._components = ComponentList([NandGate(name=f'{name}_nand1'), NandGate(name=f'{name}_nand2'),
+                                          SRNandLatch(name=f'{name}_srnand')])
         self._outputs = self._components[2].output_nodes
         super().__init__(inputs, name)
 
