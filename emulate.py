@@ -14,7 +14,9 @@ class State(enum.IntFlag):
             return int(self) == int(other.state)
 
         if not isinstance(other, State):
-            raise ValueError(f'Cannot compare {other.__class__.__name__} class with a State class.')
+            raise ValueError(
+                f"Cannot compare {other.__class__.__name__} class with a State class."
+            )
 
         return int(self) == int(other)
 
@@ -28,14 +30,14 @@ class Node:
         if name:
             self.name = name
         else:
-            self.name = f'Node{Node._id_counter}'
+            self.name = f"Node{Node._id_counter}"
 
     def __str__(self):
-        return f'{self.name}: {str(self.state)}'
+        return f"{self.name}: {str(self.state)}"
 
 
 class NamedObjectList(list):
-    object_type_name = 'Object'
+    object_type_name = "Object"
 
     def __getitem__(self, index):
         if isinstance(index, int):
@@ -47,33 +49,47 @@ class NamedObjectList(list):
             if n.name == name:
                 return n
         raise ValueError(
-            f'{self.object_type_name} {name} not found. Valid node names are ({", ".join(i.name for i in self)})')
+            f'{self.object_type_name} {name} not found. Valid node names are ({", ".join(i.name for i in self)})'
+        )
 
 
 class ComponentList(NamedObjectList):
-    object_type_name = 'Component'
+    object_type_name = "Component"
     pass
 
 
 class NodeList(NamedObjectList):
-    object_type_name = 'Node'
+    object_type_name = "Node"
 
-    def validate(self, element_name: str, expected_names: List[str] = None, min_length=None, max_length=None):
+    def validate(
+        self,
+        element_name: str,
+        expected_names: List[str] = None,
+        min_length=None,
+        max_length=None,
+    ):
         if min_length and len(self) < min_length:
-            raise ValueError(f'{element_name} must have a minimum of {min_length} inputs.')
+            raise ValueError(
+                f"{element_name} must have a minimum of {min_length} inputs."
+            )
 
         if max_length and len(self) > max_length:
-            raise ValueError(f'{element_name} must have a maximum of {max_length} inputs.')
+            raise ValueError(
+                f"{element_name} must have a maximum of {max_length} inputs."
+            )
 
         if expected_names:
             unexpected_names = set(i.name for i in self).difference(expected_names)
             if len(unexpected_names) > 0:
                 raise ValueError(
-                    f'The following node names were not expected: {", ".join(i for i in unexpected_names)}')
+                    f'The following node names were not expected: {", ".join(i for i in unexpected_names)}'
+                )
 
             missing_names = set(expected_names).difference(i.name for i in self)
             if len(missing_names) > 0:
-                raise ValueError(f'The following node names were missing: {", ".join(i for i in missing_names)}')
+                raise ValueError(
+                    f'The following node names were missing: {", ".join(i for i in missing_names)}'
+                )
 
     def __str__(self):
         return f'[{", ".join([str(i) for i in self])}]'
@@ -88,7 +104,7 @@ class ComponentMixin:
         if inputs:
             self.set_inputs(inputs)
         if name is None:
-            name = f'{self.__class__.__name__}'
+            name = f"{self.__class__.__name__}"
         self._name = name
 
     @property
@@ -104,7 +120,7 @@ class ComponentMixin:
 class MinTwoInputComponentMixin:
     def set_inputs(self, inputs: Union[NodeList, list]):
         if inputs and len(inputs) < 2:
-            raise ValueError(f'{self.__class__.__name__} must have two or more inputs.')
+            raise ValueError(f"{self.__class__.__name__} must have two or more inputs.")
         super().set_inputs(inputs)
 
 
@@ -113,7 +129,7 @@ class OneOutputComponent(ComponentMixin):
 
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         super().__init__(inputs, name)
-        out_name = f'{name}_out' if name else None
+        out_name = f"{name}_out" if name else None
         if not self._output:
             self._output = Node(name=out_name)
 
@@ -151,20 +167,28 @@ class MultipleOutputComponent(ComponentMixin):
 
 class OrGate(MinTwoInputComponentMixin, OneOutputComponent):
     def calculate(self):
-        self._output.state = State.high if any(i.state >= State.high for i in self._inputs) else State.low
+        self._output.state = (
+            State.high
+            if any(i.state >= State.high for i in self._inputs)
+            else State.low
+        )
         return self._output.state
 
 
 class AndGate(MinTwoInputComponentMixin, OneOutputComponent):
     def calculate(self):
-        self._output.state = State.high if all(i.state >= State.high for i in self._inputs) else State.low
+        self._output.state = (
+            State.high
+            if all(i.state >= State.high for i in self._inputs)
+            else State.low
+        )
         return self._output.state
 
 
 class NotGate(OneOutputComponent):
     def set_inputs(self, inputs: Union[NodeList, list]):
         if len(inputs) != 1:
-            raise ValueError('A not gate can only have one input.')
+            raise ValueError("A not gate can only have one input.")
         super().set_inputs(inputs)
 
     def calculate(self):
@@ -175,13 +199,13 @@ class NotGate(OneOutputComponent):
 class NorGate(MinTwoInputComponentMixin, OneOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         self._components = ComponentList([OrGate(), NotGate()])
-        self._output = self._components['NotGate'].output_node
+        self._output = self._components["NotGate"].output_node
         super().__init__(inputs, name)
 
     def set_inputs(self, inputs: Union[NodeList, list]):
         super().set_inputs(inputs)
-        or_gate = self._components['OrGate']
-        not_gate = self._components['NotGate']
+        or_gate = self._components["OrGate"]
+        not_gate = self._components["NotGate"]
         or_gate.set_inputs(inputs)
         not_gate.set_inputs([or_gate.output_node])
 
@@ -189,13 +213,13 @@ class NorGate(MinTwoInputComponentMixin, OneOutputComponent):
 class NandGate(MinTwoInputComponentMixin, OneOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         self._components = ComponentList([AndGate(), NotGate()])
-        self._output = self._components['NotGate'].output_node
+        self._output = self._components["NotGate"].output_node
         super().__init__(inputs, name)
 
     def set_inputs(self, inputs: Union[NodeList, list]):
         super().set_inputs(inputs)
-        and_gate = self._components['AndGate']
-        not_gate = self._components['NotGate']
+        and_gate = self._components["AndGate"]
+        not_gate = self._components["NotGate"]
         and_gate.set_inputs(inputs)
         not_gate.set_inputs([and_gate.output_node])
 
@@ -211,41 +235,47 @@ class XorGate(MinTwoInputComponentMixin, OneOutputComponent):
 class XnorGate(MinTwoInputComponentMixin, OneOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         self._components = ComponentList([XorGate(), NotGate()])
-        self._output = self._components['NotGate'].output_node
+        self._output = self._components["NotGate"].output_node
         super().__init__(inputs, name)
 
     def set_inputs(self, inputs: Union[NodeList, list]):
         super().set_inputs(inputs)
-        xor_gate = self._components['XorGate']
-        not_gate = self._components['NotGate']
+        xor_gate = self._components["XorGate"]
+        not_gate = self._components["NotGate"]
         xor_gate.set_inputs(inputs)
         not_gate.set_inputs([xor_gate.output_node])
 
 
 class SRNorLatch(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self._components = ComponentList([NorGate(name='NorGate1'), NorGate(name='NorGate2')])
+        self._components = ComponentList(
+            [NorGate(name="NorGate1"), NorGate(name="NorGate2")]
+        )
         self._outputs = NodeList([i.output_node for i in self._components])
         super().__init__(inputs, name)
 
     def set_inputs(self, inputs: Union[NodeList, list]):
         if isinstance(inputs, list):
             inputs = NodeList(inputs)
-        inputs.validate(self.name, expected_names=['Set', 'Reset'], min_length=2, max_length=2)
+        inputs.validate(
+            self.name, expected_names=["Set", "Reset"], min_length=2, max_length=2
+        )
 
         super().set_inputs(inputs)
-        nor_gate1 = self._components['NorGate1']
-        nor_gate2 = self._components['NorGate2']
-        nor_gate1.set_inputs([inputs.get_object_by_name('Reset'), nor_gate2.output_node])
-        nor_gate2.set_inputs([inputs.get_object_by_name('Set'), nor_gate1.output_node])
-        nor_gate1.output_node.name = f'Q'
-        nor_gate2.output_node.name = f'QBar'
+        nor_gate1 = self._components["NorGate1"]
+        nor_gate2 = self._components["NorGate2"]
+        nor_gate1.set_inputs(
+            [inputs.get_object_by_name("Reset"), nor_gate2.output_node]
+        )
+        nor_gate2.set_inputs([inputs.get_object_by_name("Set"), nor_gate1.output_node])
+        nor_gate1.output_node.name = f"Q"
+        nor_gate2.output_node.name = f"QBar"
         self._outputs = NodeList([nor_gate1.output_node, nor_gate2.output_node])
 
     def calculate(self):
-        self._components['NorGate1'].calculate()
-        self._components['NorGate2'].calculate()
-        self._components['NorGate1'].calculate()
+        self._components["NorGate1"].calculate()
+        self._components["NorGate2"].calculate()
+        self._components["NorGate1"].calculate()
         return self.output_nodes
 
     def __str__(self):
@@ -254,28 +284,32 @@ class SRNorLatch(MultipleOutputComponent):
 
 class SRNandLatch(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self._components = ComponentList([NandGate(name='NandGate1'), NandGate(name='NandGate2')])
+        self._components = ComponentList(
+            [NandGate(name="NandGate1"), NandGate(name="NandGate2")]
+        )
         self._outputs = NodeList([i.output_node for i in self._components])
         super().__init__(inputs, name)
 
     def set_inputs(self, inputs: Union[NodeList, list]):
         if isinstance(inputs, list):
             inputs = NodeList(inputs)
-        inputs.validate(self.name, expected_names=['Set', 'Reset'], min_length=2, max_length=2)
+        inputs.validate(
+            self.name, expected_names=["Set", "Reset"], min_length=2, max_length=2
+        )
 
         super().set_inputs(inputs)
-        gate1 = self._components['NandGate1']
-        gate2 = self._components['NandGate2']
-        gate1.set_inputs([inputs.get_object_by_name('Set'), gate2.output_node])
-        gate2.set_inputs([inputs.get_object_by_name('Reset'), gate1.output_node])
-        gate1.output_node.name = f'Q'
-        gate2.output_node.name = f'QBar'
+        gate1 = self._components["NandGate1"]
+        gate2 = self._components["NandGate2"]
+        gate1.set_inputs([inputs.get_object_by_name("Set"), gate2.output_node])
+        gate2.set_inputs([inputs.get_object_by_name("Reset"), gate1.output_node])
+        gate1.output_node.name = f"Q"
+        gate2.output_node.name = f"QBar"
         self._outputs = NodeList([gate1.output_node, gate2.output_node])
 
     def calculate(self):
-        self._components['NandGate1'].calculate()
-        self._components['NandGate2'].calculate()
-        self._components['NandGate1'].calculate()
+        self._components["NandGate1"].calculate()
+        self._components["NandGate2"].calculate()
+        self._components["NandGate1"].calculate()
         return self.output_nodes
 
     def __str__(self):
@@ -285,25 +319,32 @@ class SRNandLatch(MultipleOutputComponent):
 class DTypeFlipFlop(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         self._components = ComponentList(
-            [NotGate(), NandGate(name='NandGate1'), NandGate(name='NandGate2'),
-             SRNandLatch()])
+            [
+                NotGate(),
+                NandGate(name="NandGate1"),
+                NandGate(name="NandGate2"),
+                SRNandLatch(),
+            ]
+        )
         self._outputs = self._components[3].output_nodes
         super().__init__(inputs, name)
 
     def set_inputs(self, inputs: Union[NodeList, list]):
         if isinstance(inputs, list):
             inputs = NodeList(inputs)
-        inputs.validate(self.name, expected_names=['D', 'Clk'], min_length=2, max_length=2)
+        inputs.validate(
+            self.name, expected_names=["D", "Clk"], min_length=2, max_length=2
+        )
         super().set_inputs(inputs)
-        not_gate = self._components['NotGate']
-        not_gate.set_inputs([inputs['D']])
-        nand_set = self._components['NandGate1']
-        nand_set.set_inputs([inputs['D'], inputs['Clk']])
-        nand_set.output_node.name = 'Set'
-        nand_reset = self._components['NandGate2']
-        nand_reset.set_inputs([not_gate.output_node, inputs['Clk']])
-        nand_reset.output_node.name = 'Reset'
-        srnand = self._components['SRNandLatch']
+        not_gate = self._components["NotGate"]
+        not_gate.set_inputs([inputs["D"]])
+        nand_set = self._components["NandGate1"]
+        nand_set.set_inputs([inputs["D"], inputs["Clk"]])
+        nand_set.output_node.name = "Set"
+        nand_reset = self._components["NandGate2"]
+        nand_reset.set_inputs([not_gate.output_node, inputs["Clk"]])
+        nand_reset.output_node.name = "Reset"
+        srnand = self._components["SRNandLatch"]
         srnand.set_inputs([nand_set.output_node, nand_reset.output_node])
         self._outputs = srnand.output_nodes
 
@@ -313,23 +354,26 @@ class DTypeFlipFlop(MultipleOutputComponent):
 
 class JKFlipFlop(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self._components = ComponentList([NandGate(name='NandGate1'), NandGate(name='NandGate2'),
-                                          SRNandLatch()])
-        self._outputs = self._components['SRNandLatch'].output_nodes
+        self._components = ComponentList(
+            [NandGate(name="NandGate1"), NandGate(name="NandGate2"), SRNandLatch()]
+        )
+        self._outputs = self._components["SRNandLatch"].output_nodes
         super().__init__(inputs, name)
 
     def set_inputs(self, inputs: Union[NodeList, list]):
         if isinstance(inputs, list):
             inputs = NodeList(inputs)
-        inputs.validate(self.name, expected_names=['J', 'K', 'Clk'], min_length=2, max_length=2)
+        inputs.validate(
+            self.name, expected_names=["J", "K", "Clk"], min_length=2, max_length=2
+        )
         super().set_inputs(inputs)
-        srnand = self._components['SRNandLatch']
-        nand_set = self._components['NandGate1']
-        nand_set.set_inputs([inputs['J'], inputs['Clk'], srnand.output_nodes['Qbar']])
-        nand_set.output_node.name = 'Set'
-        nand_reset = self._components['NandGate2']
-        nand_reset.set_inputs([inputs['K'], inputs['Clk'], srnand.output_nodes['Q']])
-        nand_reset.output_node.name = 'Reset'
+        srnand = self._components["SRNandLatch"]
+        nand_set = self._components["NandGate1"]
+        nand_set.set_inputs([inputs["J"], inputs["Clk"], srnand.output_nodes["Qbar"]])
+        nand_set.output_node.name = "Set"
+        nand_reset = self._components["NandGate2"]
+        nand_reset.set_inputs([inputs["K"], inputs["Clk"], srnand.output_nodes["Q"]])
+        nand_reset.output_node.name = "Reset"
         srnand.set_inputs([nand_set.output_node, nand_reset.output_node])
         self._outputs = srnand.output_nodes
 
@@ -355,5 +399,5 @@ def main():
     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
