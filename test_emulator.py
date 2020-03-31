@@ -74,7 +74,6 @@ class TwoInputMixin:
     def test_names(self):
         c = self.component([Node(State.low), Node(State.low)], name='testname')
         assert c.name == 'testname'
-        assert c.output_node.name == 'testname_out'
 
     def test_one_input_fails_init(self):
         with pytest.raises(ValueError) as ex:
