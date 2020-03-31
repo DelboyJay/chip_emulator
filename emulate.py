@@ -292,14 +292,33 @@ class DTypeFlipFlop(MultipleOutputComponent):
         nand_reset.output_node.name = 'Reset'
         srnand = self._components[3]
         srnand.set_inputs([nand_set.output_node, nand_reset.output_node])
-        self._outputs = NodeList([srnand.output_nodes['Q'], srnand.output_nodes['QBar']])
+        self._outputs = srnand.output_nodes
 
-    def calculate(self):
-        self._components[0].calculate()
-        self._components[1].calculate()
-        self._components[2].calculate()
-        self._components[3].calculate()
-        return self.output_nodes
+    def __str__(self):
+        return f'({self._inputs["D"]},{self._inputs["Clk"]} ) -> ({self._outputs["Q"]}, {self._outputs["QBar"]})'
+
+
+class JKFlipFlop(MultipleOutputComponent):
+    def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
+        self._components = [NandGate(name=f'{name}_nand1'), NandGate(name=f'{name}_nand2'),
+                            SRNandLatch(name=f'{name}_srnand')]
+        self._outputs = self._components[2].output_nodes
+        super().__init__(inputs, name)
+
+    def set_inputs(self, inputs: Union[NodeList, list]):
+        if isinstance(inputs, list):
+            inputs = NodeList(inputs)
+        inputs.validate(self.name, expected_names=['J', 'K', 'Clk'], min_length=2, max_length=2)
+        super().set_inputs(inputs)
+        srnand = self._components[3]
+        nand_set = self._components[0]
+        nand_set.set_inputs([inputs['J'], inputs['Clk'], srnand.output_nodes['Qbar']])
+        nand_set.output_node.name = 'Set'
+        nand_reset = self._components[1]
+        nand_reset.set_inputs([inputs['K'], inputs['Clk'], srnand.output_nodes['Q']])
+        nand_reset.output_node.name = 'Reset'
+        srnand.set_inputs([nand_set.output_node, nand_reset.output_node])
+        self._outputs = srnand.output_nodes
 
     def __str__(self):
         return f'({self._inputs["D"]},{self._inputs["Clk"]} ) -> ({self._outputs["Q"]}, {self._outputs["QBar"]})'
