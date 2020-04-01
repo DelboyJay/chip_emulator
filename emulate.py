@@ -96,10 +96,6 @@ class NodeList(NamedObjectList):
 
 
 class ComponentBase:
-    _components: ComponentList = NotImplemented
-    _inputs: NodeList = NotImplemented
-    _name: str = None
-
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         if inputs:
             self.set_inputs(inputs)
@@ -253,6 +249,7 @@ class XnorGate(MinTwoInputOneOutputComponent):
 
 class SRNorLatch(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
+        self.name = name
         self._components = ComponentList(
             [NorGate(name="NorGate1"), NorGate(name="NorGate2")]
         )
@@ -289,6 +286,7 @@ class SRNorLatch(MultipleOutputComponent):
 
 class SRNandLatch(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
+        self.name = name
         self._components = ComponentList(
             [NandGate(name="NandGate1"), NandGate(name="NandGate2")]
         )
@@ -323,6 +321,7 @@ class SRNandLatch(MultipleOutputComponent):
 
 class DTypeFlipFlop(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
+        self.name = name
         self._components = ComponentList(
             [
                 NotGate(),
@@ -359,6 +358,7 @@ class DTypeFlipFlop(MultipleOutputComponent):
 
 class JKFlipFlop(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
+        self.name = name
         self._components = ComponentList(
             [NandGate(name="NandGate1"), NandGate(name="NandGate2"), SRNandLatch()]
         )
