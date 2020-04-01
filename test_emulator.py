@@ -137,6 +137,15 @@ class TestComponentBase:
             == "get_components() must return a ComponentList, list or tuple."
         )
 
+    def test_get_components_mixture_of_types_and_instances(self):
+        class A(ComponentBase):
+            def get_components(self) -> Union[List, Tuple]:
+                return OrGate, AndGate()
+
+        a = A()
+        assert isinstance(a._components["OrGate"], OrGate)
+        assert isinstance(a._components["AndGate"], AndGate)
+
 
 class TestOneOutputComponent:
     def test_str(self):

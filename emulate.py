@@ -116,14 +116,13 @@ class ComponentBase:
 
         else:
             c = self.get_components()
-            if isinstance(c, ComponentList):
-                self._components = c
-            elif isinstance(c, (list, tuple)):
-                self._components = ComponentList(c)
-            else:
+            if not isinstance(c, (ComponentList, list, tuple)):
                 raise ValueError(
                     "get_components() must return a ComponentList, list or tuple."
                 )
+            self._components = ComponentList(
+                [i() if i.__class__ is type else i for i in c]
+            )
         self.name = name
         if inputs:
             self.inputs = inputs
@@ -356,10 +355,10 @@ class DTypeFlipFlop(MultipleOutputComponent):
 
     def get_components(self):
         return (
-            NotGate(),
+            NotGate,
             NandGate(name="NandGate1"),
             NandGate(name="NandGate2"),
-            SRNandLatch(),
+            SRNandLatch,
         )
 
     @MultipleOutputComponent.inputs.setter
@@ -386,13 +385,13 @@ class DTypeFlipFlop(MultipleOutputComponent):
 class JKFlipFlop(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         super().__init__(inputs, name)
-        self._outputs = self._components["SRNandLatch"].outputss
+        self._outputs = self._components["SRNandLatch"].outputs
 
     def get_components(self):
         return (
             NandGate(name="NandGate1"),
             NandGate(name="NandGate2"),
-            SRNandLatch(),
+            SRNandLatch,
         )
 
     @MultipleOutputComponent.inputs.setter
@@ -405,13 +404,13 @@ class JKFlipFlop(MultipleOutputComponent):
         MultipleOutputComponent.inputs.fset(self, inputs)
         srnand = self._components["SRNandLatch"]
         nand_set = self._components["NandGate1"]
-        nand_set.inputs = [inputs["J"], inputs["Clk"], srnand.outputss["Qbar"]]
+        nand_set.inputs = [inputs["J"], inputs["Clk"], srnand.outputs["Qbar"]]
         nand_set.outputs[0].name = "Set"
         nand_reset = self._components["NandGate2"]
-        nand_reset.inputs = [inputs["K"], inputs["Clk"], srnand.outputss["Q"]]
-        nand_reset.outputs.name = "Reset"
+        nand_reset.inputs = [inputs["K"], inputs["Clk"], srnand.outputs["Q"]]
+        nand_reset.outputs[0].name = "Reset"
         srnand.inputs = [nand_set.outputs[0], nand_reset.outputs[0]]
-        self._outputs = srnand.outputss
+        self._outputs = srnand.outputs
 
 
 def main():
