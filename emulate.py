@@ -95,7 +95,7 @@ class NodeList(NamedObjectList):
         return f'[{", ".join([str(i) for i in self])}]'
 
 
-class ComponentMixin:
+class ComponentBase:
     _components: ComponentList = NotImplemented
     _inputs: NodeList = NotImplemented
     _name: str = None
@@ -121,14 +121,7 @@ class ComponentMixin:
         self._inputs = inputs
 
 
-class MinTwoInputComponentMixin:
-    def set_inputs(self, inputs: Union[NodeList, list]):
-        if inputs and len(inputs) < 2:
-            raise ValueError(f"{self.__class__.__name__} must have two or more inputs.")
-        super().set_inputs(inputs)
-
-
-class OneOutputComponent(ComponentMixin):
+class OneOutputComponent(ComponentBase):
     _output: Node = None
 
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
@@ -150,7 +143,14 @@ class OneOutputComponent(ComponentMixin):
         return f'{self.name}: ({", ".join([str(i) for i in self._inputs])}) -> ({str(self._output)})'
 
 
-class MultipleOutputComponent(ComponentMixin):
+class MinTwoInputOneOutputComponent(OneOutputComponent):
+    def set_inputs(self, inputs: Union[NodeList, list]):
+        if inputs and len(inputs) < 2:
+            raise ValueError(f"{self.__class__.__name__} must have two or more inputs.")
+        super().set_inputs(inputs)
+
+
+class MultipleOutputComponent(ComponentBase):
     _outputs: NodeList = None
 
     def calculate(self):
@@ -169,7 +169,7 @@ class MultipleOutputComponent(ComponentMixin):
         )
 
 
-class OrGate(MinTwoInputComponentMixin, OneOutputComponent):
+class OrGate(MinTwoInputOneOutputComponent):
     def calculate(self):
         self._output.state = (
             State.high
@@ -179,7 +179,7 @@ class OrGate(MinTwoInputComponentMixin, OneOutputComponent):
         return self._output.state
 
 
-class AndGate(MinTwoInputComponentMixin, OneOutputComponent):
+class AndGate(MinTwoInputOneOutputComponent):
     def calculate(self):
         self._output.state = (
             State.high
@@ -193,6 +193,7 @@ class NotGate(OneOutputComponent):
     def set_inputs(self, inputs: Union[NodeList, list]):
         if len(inputs) != 1:
             raise ValueError("A not gate can only have one input.")
+        # Skip MinTwoInputOneOutputComponent.set_inputs and execute ComponentBase.set_inputs instead
         super().set_inputs(inputs)
 
     def calculate(self):
@@ -200,7 +201,7 @@ class NotGate(OneOutputComponent):
         return self._output.state
 
 
-class NorGate(MinTwoInputComponentMixin, OneOutputComponent):
+class NorGate(MinTwoInputOneOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         self._components = ComponentList([OrGate(), NotGate()])
         self._output = self._components["NotGate"].output_node
@@ -214,7 +215,7 @@ class NorGate(MinTwoInputComponentMixin, OneOutputComponent):
         not_gate.set_inputs([or_gate.output_node])
 
 
-class NandGate(MinTwoInputComponentMixin, OneOutputComponent):
+class NandGate(MinTwoInputOneOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         self._components = ComponentList([AndGate(), NotGate()])
         self._output = self._components["NotGate"].output_node
@@ -228,7 +229,7 @@ class NandGate(MinTwoInputComponentMixin, OneOutputComponent):
         not_gate.set_inputs([and_gate.output_node])
 
 
-class XorGate(MinTwoInputComponentMixin, OneOutputComponent):
+class XorGate(MinTwoInputOneOutputComponent):
     def calculate(self):
         converted_inputs = [i.state >= State.high for i in self._inputs]
         result = Counter(converted_inputs)
@@ -236,7 +237,7 @@ class XorGate(MinTwoInputComponentMixin, OneOutputComponent):
         return self._output.state
 
 
-class XnorGate(MinTwoInputComponentMixin, OneOutputComponent):
+class XnorGate(MinTwoInputOneOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         self._components = ComponentList([XorGate(), NotGate()])
         self._output = self._components["NotGate"].output_node
