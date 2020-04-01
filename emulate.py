@@ -1,6 +1,6 @@
 import enum
 from collections import Counter
-from typing import List, Union, Iterable
+from typing import List, Union, Iterable, Tuple
 
 
 @enum.unique
@@ -98,8 +98,12 @@ class NodeList(NamedObjectList):
 class ComponentBase:
     _inputs = None
     _outputs = None
-    components: Iterable = None
     _components: ComponentList = None
+
+    # A component can be made up from other components and these can be specified in this variable as a global list of
+    # component types (not instances). If you need to use component instances then overload the get)instances function
+    # and specify them there.
+    components: Union[List, Tuple] = None
 
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         if self.components:
@@ -144,7 +148,14 @@ class ComponentBase:
             inputs = NodeList(inputs)
         self._inputs = inputs
 
-    def get_components(self):
+    def get_components(self) -> Union[List, Tuple]:
+        """
+        If the class needs to create sub-components and create instances of them then they can be specified in this
+        function and returned as a list or tuple.
+        Note that you can specify type or instances here, it does not matter but the components global variable can only
+        hold component types.
+        i.e return [OrGate(name='OrGate1'), AndGate, OrGate(name='OrGate2')]
+        """
         return list()
 
     @property
@@ -173,7 +184,7 @@ class MinTwoInputOneOutputComponent(OneOutputComponent):
     def inputs(self, inputs: Union[NodeList, list]):
         if inputs and len(inputs) < 2:
             raise ValueError(f"{self.__class__.__name__} must have two or more inputs.")
-        OneOutputComponent.inputs.fset(self, inputs)
+        ComponentBase.inputs.fset(self, inputs)
 
 
 class MultipleOutputComponent(ComponentBase):
@@ -305,9 +316,6 @@ class SRNorLatch(MultipleOutputComponent):
         self._components["NorGate1"].calculate()
         return self.outputs
 
-    def __str__(self):
-        return f'({self.inputs["Reset"]},{self.inputs["Set"]} ) -> ({self.outputs["Q"]}, {self._outputs["QBar"]})'
-
 
 class SRNandLatch(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
@@ -339,9 +347,6 @@ class SRNandLatch(MultipleOutputComponent):
         self._components["NandGate2"].calculate()
         self._components["NandGate1"].calculate()
         return self.outputs
-
-    def __str__(self):
-        return f'({self.inputs["Reset"]},{self.inputs["Set"]} ) -> ({self.outputs["Q"]}, {self.outputs["QBar"]})'
 
 
 class DTypeFlipFlop(MultipleOutputComponent):
@@ -377,9 +382,6 @@ class DTypeFlipFlop(MultipleOutputComponent):
         srnand.inputs = [nand_set.outputs[0], nand_reset.outputs[0]]
         self._outputs = srnand.outputs
 
-    def __str__(self):
-        return f'({self.inputs["D"]},{self.inputs["Clk"]} ) -> ({self.outputs["Q"]}, {self.outputs["QBar"]})'
-
 
 class JKFlipFlop(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
@@ -410,12 +412,6 @@ class JKFlipFlop(MultipleOutputComponent):
         nand_reset.outputs.name = "Reset"
         srnand.inputs = [nand_set.outputs[0], nand_reset.outputs[0]]
         self._outputs = srnand.outputss
-
-    def __str__(self):
-        return (
-            f'({self.inputs["J"]},{self.inputs["K"]},{self.inputs["Clk"]} ) -> '
-            f'({self.outputs["Q"]}, {self.outputs["QBar"]})'
-        )
 
 
 def main():

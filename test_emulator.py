@@ -1,3 +1,5 @@
+from typing import Tuple, List, Union
+
 import pytest
 from emulate import (
     State,
@@ -13,7 +15,28 @@ from emulate import (
     SRNorLatch,
     SRNandLatch,
     DTypeFlipFlop,
+    ComponentBase,
+    ComponentList,
+    OneOutputComponent,
+    MultipleOutputComponent,
 )
+
+
+class TestState:
+    def test_comparing_nodes_with_states(self):
+        a = Node(state=State.high)
+        assert a == State.high
+
+    def test_comparing_anything_else_fails(self):
+        with pytest.raises(ValueError) as ex:
+            assert OrGate() == State.low
+        assert str(ex.value) == "Cannot compare OrGate class with a State class."
+
+
+class TestNode:
+    def test_str(self):
+        a = Node(name="hello world", state=State.high)
+        assert str(a) == f"hello world: State.high"
 
 
 class TestNodeList:
@@ -79,6 +102,67 @@ class TestNodeList:
         with pytest.raises(ValueError) as ex:
             nodes.get_object_by_name("Set")
         assert str(ex.value) == f"Node Set not found. Valid node names are (set, 2, 3)"
+
+    def test_str(self):
+        a = NodeList([Node(name="node", state=State.high)])
+        assert str(a) == "[node: State.high]"
+
+
+class TestComponentBase:
+    def test_components_variable_is_tuple_or_list(self):
+        class A(ComponentBase):
+            components = OrGate
+
+        with pytest.raises(ValueError) as ex:
+            A()
+        assert str(ex.value) == "components variable must be set to a list or tuple."
+
+    def test_get_components_returns_component_list(self):
+        class A(ComponentBase):
+            def get_components(self) -> Union[List, Tuple]:
+                return ComponentList()
+
+        a = A()
+        assert a._components == ComponentList()
+
+    def test_get_components_returns_invalid_object(self):
+        class A(ComponentBase):
+            def get_components(self) -> Union[List, Tuple]:
+                return "This is not right!"
+
+        with pytest.raises(ValueError) as ex:
+            A()
+        assert (
+            str(ex.value)
+            == "get_components() must return a ComponentList, list or tuple."
+        )
+
+
+class TestOneOutputComponent:
+    def test_str(self):
+        a = OneOutputComponent(
+            inputs=[Node(name="node1"), Node(name="node2", state=State.high)],
+            name="my component",
+        )
+        a._outputs = NodeList([Node(name="output")])
+        assert (
+            str(a)
+            == "my component: (node1: State.low, node2: State.high) -> (output: State.low)"
+        )
+
+
+class TestMultipleOutputComponent:
+    def test_str(self):
+        a = MultipleOutputComponent(
+            inputs=[Node(name="node1"), Node(name="node2", state=State.high)],
+            name="my component",
+        )
+        a._outputs = NodeList(
+            [Node(name="output1"), Node(name="output2", state=State.high)]
+        )
+        assert str(a) == (
+            "my component: (node1: State.low, node2: State.high) -> (output1: State.low, output2: State.high)"
+        )
 
 
 class TwoInputMixin:
@@ -256,6 +340,11 @@ class TestNotGate:
         c = self.component([Node(State.low)], name="testname")
         assert c.name == "testname"
         assert c.outputs[0].name == "testname_out"
+
+    def test_too_many_inputs(self):
+        with pytest.raises(ValueError) as ex:
+            self.component([Node(), Node()])
+        assert str(ex.value) == "A not gate can only have one input."
 
 
 class TestSRNorLatch:
