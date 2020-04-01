@@ -103,13 +103,17 @@ class ComponentMixin:
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         if inputs:
             self.set_inputs(inputs)
-        if name is None:
-            name = f"{self.__class__.__name__}"
-        self._name = name
+        self.name = name
 
     @property
     def name(self):
         return self._name
+
+    @name.setter
+    def name(self, name: str):
+        if name is None:
+            name = f"{self.__class__.__name__}"
+        self._name = name
 
     def set_inputs(self, inputs: Union[NodeList, list]):
         if isinstance(inputs, list):
