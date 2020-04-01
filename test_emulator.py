@@ -125,7 +125,7 @@ class TestOrGate(TwoInputMixin):
         ),
     )
     def test_gate(self, ina, inb, inc, result):
-        c = self.component(NodeList([Node(ina), Node(inb), Node(inc)]))
+        c = self.component([Node(ina), Node(inb), Node(inc)])
         assert c.calculate() == result
         assert c.output_node.state == result
 
@@ -147,7 +147,7 @@ class TestNorGate(TwoInputMixin):
         ),
     )
     def test_nor_gate(self, ina, inb, inc, result):
-        c = self.component(NodeList([Node(ina), Node(inb), Node(inc)]))
+        c = self.component([Node(ina), Node(inb), Node(inc)])
         assert c.calculate() == result
         assert c.output_node.state == result
 
@@ -169,7 +169,7 @@ class TestAndGate(TwoInputMixin):
         ),
     )
     def test_and_gate(self, ina, inb, inc, result):
-        c = self.component(NodeList([Node(ina), Node(inb), Node(inc)]))
+        c = self.component([Node(ina), Node(inb), Node(inc)])
         assert c.calculate() == result
         assert c.output_node.state == result
 
@@ -191,7 +191,7 @@ class TestNandGate(TwoInputMixin):
         ),
     )
     def test_nand_gate(self, ina, inb, inc, result):
-        c = self.component(NodeList([Node(ina), Node(inb), Node(inc)]))
+        c = self.component([Node(ina), Node(inb), Node(inc)])
         assert c.calculate() == result
         assert c.output_node.state == result
 
@@ -213,7 +213,7 @@ class TestXorGate(TwoInputMixin):
         ),
     )
     def test_xor_gate(self, ina, inb, inc, result):
-        c = self.component(NodeList([Node(ina), Node(inb), Node(inc)]))
+        c = self.component([Node(ina), Node(inb), Node(inc)])
         assert c.calculate() == result
         assert c.output_node.state == result
 
@@ -235,7 +235,7 @@ class TestXnorGate(TwoInputMixin):
         ),
     )
     def test_xnor_gate(self, ina, inb, inc, result):
-        c = self.component(NodeList([Node(ina), Node(inb), Node(inc)]))
+        c = self.component([Node(ina), Node(inb), Node(inc)])
         assert c.calculate() == result
         assert c.output_node.state == result
 
@@ -248,12 +248,12 @@ class TestNotGate:
     )
     def test_not_gate(self, ina, result):
         a = Node(ina)
-        b = self.component(NodeList([a]))
+        b = self.component([a])
         assert b.calculate() == result
         assert b.output_node.state == result
 
     def test_names(self):
-        c = self.component(NodeList([Node(State.low)]), name="testname")
+        c = self.component([Node(State.low)], name="testname")
         assert c.name == "testname"
         assert c.output_node.name == "testname_out"
 
@@ -269,7 +269,7 @@ class TestSRNorLatch:
         ),
     )
     def test_gate(self, s, r, q, qbar):
-        latch = SRNorLatch(NodeList([Node(s, name="Set"), Node(r, name="Reset")]))
+        latch = SRNorLatch([Node(s, name="Set"), Node(r, name="Reset")])
         out_nodes = latch.calculate()
         assert [i.state for i in out_nodes] == [q, qbar], latch
 
@@ -279,7 +279,7 @@ class TestSRNorLatch:
         """
         set_node = Node(State.low, name="Set")
         reset_node = Node(State.high, name="Reset")
-        latch = SRNorLatch(NodeList([set_node, reset_node]))
+        latch = SRNorLatch([set_node, reset_node])
         out_nodes = latch.calculate()
         assert out_nodes["Q"] == State.low
         assert out_nodes["QBar"] == State.high
@@ -314,7 +314,7 @@ class TestSRNandLatch:
         ),
     )
     def test_gate(self, s, r, q, qbar):
-        latch = SRNandLatch(NodeList([Node(s, name="Set"), Node(r, name="Reset")]))
+        latch = SRNandLatch([Node(s, name="Set"), Node(r, name="Reset")])
         out_nodes = latch.calculate()
         assert [i.state for i in out_nodes] == [q, qbar], latch
 
@@ -324,7 +324,7 @@ class TestSRNandLatch:
         """
         set_node = Node(State.low, name="Set")
         reset_node = Node(State.high, name="Reset")
-        latch = SRNandLatch(NodeList([set_node, reset_node]))
+        latch = SRNandLatch([set_node, reset_node])
         out_nodes = latch.calculate()
         assert out_nodes["Q"] == State.high
         assert out_nodes["QBar"] == State.low
@@ -352,7 +352,7 @@ class TestDTypeFlipFlop:
     def test_basic(self):
         d = Node(State.low, name="D")
         clk = Node(State.high, name="Clk")
-        ff = DTypeFlipFlop(NodeList([d, clk]))
+        ff = DTypeFlipFlop([d, clk])
         ff.calculate()
         assert ff.output_nodes["Q"].state == State.low
         assert ff.output_nodes["QBar"].state == State.high
@@ -366,7 +366,7 @@ class TestDTypeFlipFlop:
     def test_no_change_state_low_output(self):
         d = Node(State.low, name="D")
         clk = Node(State.high, name="Clk")
-        ff = DTypeFlipFlop(NodeList([d, clk]))
+        ff = DTypeFlipFlop([d, clk])
         ff.calculate()
         assert ff.output_nodes["Q"].state == State.low
         assert ff.output_nodes["QBar"].state == State.high
@@ -392,7 +392,7 @@ class TestDTypeFlipFlop:
     def test_no_change_state_high_output(self):
         d = Node(State.high, name="D")
         clk = Node(State.high, name="Clk")
-        ff = DTypeFlipFlop(NodeList([d, clk]))
+        ff = DTypeFlipFlop([d, clk])
         ff.calculate()
         assert ff.output_nodes["Q"].state == State.high
         assert ff.output_nodes["QBar"].state == State.low
