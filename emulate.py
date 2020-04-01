@@ -108,7 +108,7 @@ class ComponentBase:
                     [i() if i.__class__ is type else i for i in self.components]
                 )
             else:
-                raise ValueError('components variable must be set to a list or tuple.')
+                raise ValueError("components variable must be set to a list or tuple.")
 
         else:
             c = self.get_components()
@@ -117,7 +117,9 @@ class ComponentBase:
             elif isinstance(c, (list, tuple)):
                 self._components = ComponentList(c)
             else:
-                raise ValueError('get_components() must return a ComponentList, list or tuple.')
+                raise ValueError(
+                    "get_components() must return a ComponentList, list or tuple."
+                )
         self.name = name
         if inputs:
             self.set_inputs(inputs)
@@ -276,9 +278,11 @@ class XnorGate(MinTwoInputOneOutputComponent):
 
 class SRNorLatch(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self.components = (NorGate(name="NorGate1"), NorGate(name="NorGate2"))
         super().__init__(inputs, name)
         self._outputs = NodeList([i.output_node for i in self._components])
+
+    def get_components(self):
+        return NorGate(name="NorGate1"), NorGate(name="NorGate2")
 
     def set_inputs(self, inputs: Union[NodeList, list]):
         if isinstance(inputs, list):
@@ -314,7 +318,7 @@ class SRNandLatch(MultipleOutputComponent):
         self._outputs = NodeList([i.output_node for i in self._components])
 
     def get_components(self):
-        return (NandGate(name="NandGate1"), NandGate(name="NandGate2"))
+        return NandGate(name="NandGate1"), NandGate(name="NandGate2")
 
     def set_inputs(self, inputs: Union[NodeList, list]):
         if isinstance(inputs, list):
@@ -344,14 +348,16 @@ class SRNandLatch(MultipleOutputComponent):
 
 class DTypeFlipFlop(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self.components = (
+        super().__init__(inputs, name)
+        self._outputs = self._components["SRNandLatch"].output_nodes
+
+    def get_components(self):
+        return (
             NotGate(),
             NandGate(name="NandGate1"),
             NandGate(name="NandGate2"),
             SRNandLatch(),
         )
-        super().__init__(inputs, name)
-        self._outputs = self._components["SRNandLatch"].output_nodes
 
     def set_inputs(self, inputs: Union[NodeList, list]):
         if isinstance(inputs, list):
@@ -378,14 +384,15 @@ class DTypeFlipFlop(MultipleOutputComponent):
 
 class JKFlipFlop(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self.name = name
-        self.components = (
+        super().__init__(inputs, name)
+        self._outputs = self._components["SRNandLatch"].output_nodes
+
+    def get_components(self):
+        return (
             NandGate(name="NandGate1"),
             NandGate(name="NandGate2"),
             SRNandLatch(),
         )
-        super().__init__(inputs, name)
-        self._outputs = self._components["SRNandLatch"].output_nodes
 
     def set_inputs(self, inputs: Union[NodeList, list]):
         if isinstance(inputs, list):
