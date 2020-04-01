@@ -102,7 +102,7 @@ class TwoInputMixin:
     def test_one_input_fails_set_inputs(self):
         with pytest.raises(ValueError) as ex:
             c = self.component(name="testname")
-            c.set_inputs([Node(State.low)])
+            c.inputs = [Node(State.low)]
         assert (
             str(ex.value) == f"{self.component.__name__} must have two or more inputs."
         )
