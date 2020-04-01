@@ -97,7 +97,8 @@ class NodeList(NamedObjectList):
 
 class ComponentBase:
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
-        self._inputs = None
+        self._inputs = NotImplemented
+        self._outputs = NotImplemented
         if inputs:
             self.set_inputs(inputs)
         self.name = name
