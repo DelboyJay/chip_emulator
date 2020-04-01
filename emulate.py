@@ -178,10 +178,10 @@ class MultipleOutputComponent(ComponentBase):
     def calculate(self):
         for c in self._components:
             c.calculate()
-        return self.output_nodes
+        return self.outputs
 
     @property
-    def output_nodes(self) -> NodeList:
+    def outputs(self) -> NodeList:
         return self._outputs
 
     def __str__(self):
@@ -306,7 +306,7 @@ class SRNorLatch(MultipleOutputComponent):
         self._components["NorGate1"].calculate()
         self._components["NorGate2"].calculate()
         self._components["NorGate1"].calculate()
-        return self.output_nodes
+        return self.outputs
 
     def __str__(self):
         return f'({self._inputs["Reset"]},{self._inputs["Set"]} ) -> ({self._outputs["Q"]}, {self._outputs["QBar"]})'
@@ -340,7 +340,7 @@ class SRNandLatch(MultipleOutputComponent):
         self._components["NandGate1"].calculate()
         self._components["NandGate2"].calculate()
         self._components["NandGate1"].calculate()
-        return self.output_nodes
+        return self.outputs
 
     def __str__(self):
         return f'({self._inputs["Reset"]},{self._inputs["Set"]} ) -> ({self._outputs["Q"]}, {self._outputs["QBar"]})'
@@ -349,7 +349,7 @@ class SRNandLatch(MultipleOutputComponent):
 class DTypeFlipFlop(MultipleOutputComponent):
     def __init__(self, inputs: Union[NodeList, list] = None, name: str = None):
         super().__init__(inputs, name)
-        self._outputs = self._components["SRNandLatch"].output_nodes
+        self._outputs = self._components["SRNandLatch"].outputs
 
     def get_components(self):
         return (
@@ -376,7 +376,7 @@ class DTypeFlipFlop(MultipleOutputComponent):
         nand_reset.output_node.name = "Reset"
         srnand = self._components["SRNandLatch"]
         srnand.set_inputs([nand_set.output_node, nand_reset.output_node])
-        self._outputs = srnand.output_nodes
+        self._outputs = srnand.outputs
 
     def __str__(self):
         return f'({self._inputs["D"]},{self._inputs["Clk"]} ) -> ({self._outputs["Q"]}, {self._outputs["QBar"]})'
